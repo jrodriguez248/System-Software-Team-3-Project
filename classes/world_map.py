@@ -226,6 +226,7 @@ class world_map:
             move_to = (self.player_position[0]-1, self.player_position[1])
         else:
             print('world_map -> move_player: Error: invalid direction')
+            return
 
         # Validate location
         if self.is_obstacle(move_to):

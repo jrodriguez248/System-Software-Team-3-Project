@@ -13,8 +13,6 @@ pygame.key.set_repeat(MOVE_DELAY, MOVE_DELAY)
 
 # Game setup
 map = world_map()
-last_move_time = 0 # Milliseconds since last movement
-holding_move_key = False # True if the player is holding down one of the arrow keys
 
 
 def loop():
