@@ -185,7 +185,7 @@ class world_map:
         ```
         '''
 
-        self.data[location[0]][location[1]] = self.data[location[0]][location[1]][:-1]
+        self.data[location[1]][location[0]] = self.data[location[1]][location[0]][:-1]
 
 
     def render(self, screen: pygame.Surface, font: pygame.font.Font, render_regeion: tuple[int, int] = (21, 11), line_spacing: int = 26):
@@ -208,4 +208,30 @@ class world_map:
             screen.blit(img, (0, y * line_spacing))
 
 
+    def move_player(self, direction: str):
+        '''
+        Moves the player in a specified direction.
 
+        Accepted directions: 'n', 's', 'e', 'w'
+        '''
+
+        # Get move-to location
+        if direction == 'n':
+            move_to = (self.player_position[0], self.player_position[1]-1)
+        elif direction == 's':
+            move_to = (self.player_position[0], self.player_position[1]+1)
+        elif direction == 'e':
+            move_to = (self.player_position[0]+1, self.player_position[1])
+        elif direction == 'w':
+            move_to = (self.player_position[0]-1, self.player_position[1])
+        else:
+            print('world_map -> move_player: Error: invalid direction')
+
+        # Validate location
+        if self.is_obstacle(move_to):
+            return
+
+        # Move player to new location
+        self.remove_top_char_from_tile(self.player_position)
+        self.player_position = move_to
+        self.add_char_to_tile('P', self.player_position)
