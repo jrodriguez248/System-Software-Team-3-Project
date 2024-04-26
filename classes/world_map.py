@@ -34,10 +34,10 @@ from random import randint
 class world_map:
     def __init__(self) -> None:
         # Initialize variables
-        self.data: list[list[str]] = None # Stores the map data in a 2D array of strings
-        self.map_size: tuple[int, int] = None # Width and height of map
-        self.player_position: tuple[int, int] = (33, 15) # Location of player
-        self.resources: list[resource] = [] # Properties for all resources that have been spawned
+        self.__data: list[list[str]] = None # Stores the map data in a 2D array of strings
+        self.__map_size: tuple[int, int] = None # Width and height of map
+        self.__player_position: tuple[int, int] = (33, 15) # Location of player
+        self.__resources: list[resource] = [] # Properties for all resources that have been spawned
 
         self.initialize()
 
@@ -51,16 +51,16 @@ class world_map:
         '''
 
         # Reset variables
-        if self.data != None:
-            self.data.clear()
-        if self.resources != None:
-            self.resources.clear()
+        if self.__data != None:
+            self.__data.clear()
+        if self.__resources != None:
+            self.__resources.clear()
 
         # Load map data
         self.load_map_from_file()
 
         # Add player to map
-        self.add_char_to_tile('P', self.player_position)
+        self.add_char_to_tile('P', self.__player_position)
 
         # Generate trees
         NUM_TREES = 10
@@ -68,7 +68,7 @@ class world_map:
             # Find a valid tile to insert the tree
             valid_tile = False
             while not valid_tile:
-                location = (randint(0, self.map_size[0]-1), randint(0, self.map_size[1]-1))
+                location = (randint(0, self.__map_size[0]-1), randint(0, self.__map_size[1]-1))
                 if not self.is_obstacle(location):
                     valid_tile = True
 
@@ -76,7 +76,7 @@ class world_map:
             self.add_char_to_tile('T', location)
 
             # Add tree to list of resources
-            self.resources.append(resource('wood', location))
+            self.__resources.append(resource('wood', location))
 
         # Generate ore (same as generating trees)
         NUM_ORE_DEPOSITS = 10
@@ -84,7 +84,7 @@ class world_map:
             # Find a valid tile to insert the ore deposit
             valid_tile = False
             while not valid_tile:
-                location = (randint(0, self.map_size[0]-1), randint(0, self.map_size[1]-1))
+                location = (randint(0, self.__map_size[0]-1), randint(0, self.__map_size[1]-1))
                 if not self.is_obstacle(location):
                     valid_tile = True
 
@@ -93,12 +93,12 @@ class world_map:
 
             # Add ore deposit to list of resources
             ore_type = 'iron' if randint(0, 1) == 0 else 'copper'
-            self.resources.append(resource(ore_type, location))
+            self.__resources.append(resource(ore_type, location))
 
 
     def load_map_from_file(self):
         '''
-        Loads text-based map from map_data.txt into self.data as a 2D array of strings
+        Loads text-based map from map_data.txt into self.__data as a 2D array of strings
 
         Note: Make sure the input map has no player (P) or resources such as ore (O) or trees (T), because
         we need to know what kind of terrain is underneath them.
@@ -109,16 +109,16 @@ class world_map:
         with open('./content/map_data.txt') as f:
             lines = f.readlines()
 
-            self.map_size = (len(lines[0]), len(lines))
+            self.__map_size = (len(lines[0]), len(lines))
 
             # Initialize 2D data array
-            self.data = [['' for x in range(self.map_size[0])] for y in range(self.map_size[1])]
+            self.__data = [['' for x in range(self.__map_size[0])] for y in range(self.__map_size[1])]
 
             y = 0
             for line in lines:
                 x = 0
                 for value in line:
-                    self.data[y][x] = value
+                    self.__data[y][x] = value
                     x += 1
                 y += 1
 
@@ -130,7 +130,7 @@ class world_map:
         (returns top character because each tile may have multiple characters stacked on top of each other)
         '''
 
-        tile_string = self.data[location[1]][location[0]]
+        tile_string = self.__data[location[1]][location[0]]
         return tile_string[len(tile_string)-1] # Return character at the end of the tile string (tile string may look like this '*P' where the player is on top of tall grass)
     
 
@@ -158,7 +158,7 @@ class world_map:
         does not have a resource associated with it).
         '''
         
-        for resource in self.resources:
+        for resource in self.__resources:
             if resource.location == location:
                 return resource
             
@@ -170,7 +170,7 @@ class world_map:
         Adds the value (should be a single character) to the end of the data string at the provided location
         '''
 
-        self.data[location[1]][location[0]] = self.data[location[1]][location[0]] + value
+        self.__data[location[1]][location[0]] = self.__data[location[1]][location[0]] + value
 
 
     def remove_top_char_from_tile(self, location: tuple[int, int]):
@@ -185,21 +185,21 @@ class world_map:
         ```
         '''
 
-        self.data[location[1]][location[0]] = self.data[location[1]][location[0]][:-1]
+        self.__data[location[1]][location[0]] = self.__data[location[1]][location[0]][:-1]
 
 
     def render(self, screen: pygame.Surface, font: pygame.font.Font, render_regeion: tuple[int, int] = (21, 11), line_spacing: int = 26):
         # Create string that contains entire screen
         for y in range(render_regeion[1]):
             line = ''
-            world_y = y - render_regeion[1]//2 + self.player_position[1]
+            world_y = y - render_regeion[1]//2 + self.__player_position[1]
             for x in range(render_regeion[0]):
-                world_x = x - render_regeion[0]//2 + self.player_position[0]
+                world_x = x - render_regeion[0]//2 + self.__player_position[0]
                 
                 location = (world_x, world_y)
 
                 # Render empty space in locations that are outside of the map
-                if location[0] < 0 or location[0] >= self.map_size[0] or location[1] < 0 or location[1] >= self.map_size[1]:
+                if location[0] < 0 or location[0] >= self.__map_size[0] or location[1] < 0 or location[1] >= self.__map_size[1]:
                     line += ' '
                 else:
                     line += self.get_tile(location)
@@ -217,13 +217,13 @@ class world_map:
 
         # Get move-to location
         if direction == 'n':
-            move_to = (self.player_position[0], self.player_position[1]-1)
+            move_to = (self.__player_position[0], self.__player_position[1]-1)
         elif direction == 's':
-            move_to = (self.player_position[0], self.player_position[1]+1)
+            move_to = (self.__player_position[0], self.__player_position[1]+1)
         elif direction == 'e':
-            move_to = (self.player_position[0]+1, self.player_position[1])
+            move_to = (self.__player_position[0]+1, self.__player_position[1])
         elif direction == 'w':
-            move_to = (self.player_position[0]-1, self.player_position[1])
+            move_to = (self.__player_position[0]-1, self.__player_position[1])
         else:
             print('world_map -> move_player: Error: invalid direction')
             return
@@ -233,6 +233,6 @@ class world_map:
             return
 
         # Move player to new location
-        self.remove_top_char_from_tile(self.player_position)
-        self.player_position = move_to
-        self.add_char_to_tile('P', self.player_position)
+        self.remove_top_char_from_tile(self.__player_position)
+        self.__player_position = move_to
+        self.add_char_to_tile('P', self.__player_position)
