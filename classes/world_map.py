@@ -28,16 +28,17 @@ Map Key:
 '''
 
 import pygame
-from classes.resource import resource
+from classes.resource import Resource
 from random import randint
 
 class world_map:
+    # Initialization
     def __init__(self) -> None:
         # Initialize variables
         self.__data: list[list[str]] = None # Stores the map data in a 2D array of strings
         self.__map_size: tuple[int, int] = None # Width and height of map
         self.__player_position: tuple[int, int] = (33, 15) # Location of player
-        self.__resources: list[resource] = [] # Properties for all resources that have been spawned
+        self.__resources: list[Resource] = [] # Properties for all resources that have been spawned
 
         self.initialize()
 
@@ -69,14 +70,15 @@ class world_map:
             valid_tile = False
             while not valid_tile:
                 location = (randint(0, self.__map_size[0]-1), randint(0, self.__map_size[1]-1))
-                if not self.is_obstacle(location):
+                tile = self.get_tile(location)
+                if not self.is_obstacle(tile):
                     valid_tile = True
 
             # Insert tree at valid location
             self.add_char_to_tile('T', location)
 
             # Add tree to list of resources
-            self.__resources.append(resource('wood', location))
+            self.__resources.append(Resource('wood', location))
 
         # Generate ore (same as generating trees)
         NUM_ORE_DEPOSITS = 10
@@ -85,7 +87,8 @@ class world_map:
             valid_tile = False
             while not valid_tile:
                 location = (randint(0, self.__map_size[0]-1), randint(0, self.__map_size[1]-1))
-                if not self.is_obstacle(location):
+                tile = self.get_tile(location)
+                if not self.is_obstacle(tile):
                     valid_tile = True
 
             # Insert ore deposit at valid location
@@ -93,7 +96,7 @@ class world_map:
 
             # Add ore deposit to list of resources
             ore_type = 'iron' if randint(0, 1) == 0 else 'copper'
-            self.__resources.append(resource(ore_type, location))
+            self.__resources.append(Resource(ore_type, location))
 
 
     def load_map_from_file(self):
@@ -123,48 +126,7 @@ class world_map:
                 y += 1
 
 
-    def get_tile(self, location: tuple[int, int]) -> str:
-        '''
-        Returns the top character at a certain map position.
-        
-        (returns top character because each tile may have multiple characters stacked on top of each other)
-        '''
-
-        tile_string = self.__data[location[1]][location[0]]
-        return tile_string[len(tile_string)-1] # Return character at the end of the tile string (tile string may look like this '*P' where the player is on top of tall grass)
-    
-
-    def is_obstacle(self, location: tuple[int, int]):
-        '''
-        Returns true if the character at the provided location blocks character movement.
-        '''
-
-        tile = self.get_tile(location)
-        return tile == 'P' or tile == 'w' or tile == '|' or tile == 'B' or tile == 'S' or tile == 'H' or tile == 'U' or tile == 'O' or tile == 'T'
-
-
-    def is_resource(self, location: tuple[int, int]):
-        '''
-        Returns true if tile is either 'O' or 'T'.
-        '''
-
-        tile = self.get_tile(location)
-        return tile == 'O' or tile == 'T'
-
-
-    def get_resource(self, location: tuple[int, int]):
-        '''
-        Returns the resource object for the resource at the given location (or none if location
-        does not have a resource associated with it).
-        '''
-        
-        for resource in self.__resources:
-            if resource.location == location:
-                return resource
-            
-        return None
-
-
+    # Map editing
     def add_char_to_tile(self, value: str, location: tuple[int, int]):
         '''
         Adds the value (should be a single character) to the end of the data string at the provided location
@@ -188,6 +150,23 @@ class world_map:
         self.__data[location[1]][location[0]] = self.__data[location[1]][location[0]][:-1]
 
 
+    def remove_resource(self, location: tuple[int, int]):
+        '''
+        Removes resource from specified location, including the map letter, and the resoruce data
+        '''
+
+        for i in range(len(self.__resources)):
+            if self.__resources[i].location == location:
+                self.remove_top_char_from_tile(self.__resources[i].location)
+                self.__resources.pop(i)
+                return
+            
+        print('world_map.py -> remove_resource: Warning: No resource was removed at the specified location')
+
+        
+
+
+    # Rendering
     def render(self, screen: pygame.Surface, font: pygame.font.Font, render_regeion: tuple[int, int] = (21, 11), line_spacing: int = 26):
         # Create string that contains entire screen
         for y in range(render_regeion[1]):
@@ -208,6 +187,7 @@ class world_map:
             screen.blit(img, (0, y * line_spacing))
 
 
+    # Movement
     def move_player(self, direction: str):
         '''
         Moves the player in a specified direction.
@@ -229,10 +209,97 @@ class world_map:
             return
 
         # Validate location
-        if self.is_obstacle(move_to):
+        potential_tile = self.get_tile(move_to)
+        if self.is_obstacle(potential_tile):
             return
 
         # Move player to new location
         self.remove_top_char_from_tile(self.__player_position)
         self.__player_position = move_to
         self.add_char_to_tile('P', self.__player_position)
+
+
+    # Querying
+    def get_tile(self, location: tuple[int, int]) -> str:
+        '''
+        Returns the top character at a certain map position.
+        
+        (returns top character because each tile may have multiple characters stacked on top of each other)
+        '''
+
+        tile_string = self.__data[location[1]][location[0]]
+        return tile_string[len(tile_string)-1] # Return character at the end of the tile string (tile string may look like this '*P' where the player is on top of tall grass)
+    
+
+    def is_resource(self, char: str):
+        '''
+        Returns true if provided string is either 'O' or 'T'.
+        '''
+
+        return char == 'O' or char == 'T'
+
+
+    def is_building(self, char: str):
+        '''
+        Returns true if provided string is either 'B', 'S', or 'H'
+        '''
+
+        return char == 'B' or char == 'S' or char == 'H'
+
+
+    def is_interactable(self, char: str):
+        '''
+        Returns true if the provided letter is something the player can interact with.
+        '''
+
+        return self.is_building(char) or self.is_resource(char) or char == 'U'
+
+
+    def is_obstacle(self, char: str):
+        '''
+        Returns true if the provided character would block character movement.
+        '''
+
+        return self.is_building(char) or self.is_resource(char) or char == 'P' or char == 'w' or char == '|' or char == 'U'
+
+
+    def get_nearby_resource(self):
+        '''
+        Returns resource object of a nearby resource (returns None if there are no nearby resources)
+        '''
+
+        for resource in self.__resources:
+            if location_nearby(resource.location, self.__player_position):
+                return resource
+
+        return None
+
+    
+    def get_nearby_interactable(self):
+        '''
+        Returns any nearby interactable letter. Returns empty string ('') if there is nothing interactable nearby.
+        '''
+        
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                # Ignore tile directly on top of player
+                if x == 0 and y == 0:
+                    continue
+
+                location = (self.__player_position[0]+x, self.__player_position[1]+y)
+                tile = self.get_tile(location)
+                if self.is_interactable(tile):
+                    return tile
+                
+        return ''
+                
+
+def location_nearby(location_1: tuple[int, int], location_2: tuple[int, int]):
+    '''
+    Returns true if the two locations are directly next to each other virtically, horizontally, or diaginally. 
+    '''
+    
+    x_offset = location_1[0] - location_2[0]
+    y_offset = location_1[1] - location_2[1]
+
+    return x_offset >= -1 and x_offset <= 1 and y_offset >= -1 and y_offset <= 1

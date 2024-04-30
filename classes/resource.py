@@ -2,7 +2,7 @@
 Resource classes for ores and trees.
 '''
 
-class resource:
+class Resource:
     def __init__(self, type: str, location: tuple[int, int]) -> None:
         '''
         Available types: 'iron', 'copper', 'wood'
@@ -17,7 +17,7 @@ class resource:
         self.location = location
 
     def mine(self, amount: float):
-        self.health = min(self.health - amount, 0.0)
+        self.health = max(self.health - amount, 0.0)
 
     def is_mined(self) -> bool:
         return self.health == 0.0
