@@ -1,37 +1,26 @@
-'''
-
-Approach:
-    Create map class
-    Handles movement
-    Has functions to check if you are near an ore, tree, building, or boat
-    Has render function (takes screen as input)
-    Handles resource mining:
-        At initialization, all mining sites are assigned a resource object
-        When a resource is mined, it will use the object corresponding to that deposit
-        If the resource is successfully mined, the resource spot will be removed
-    Camera panning
-    Map is a 2D array of strings, where characters can stack (which allows things like grass under the player, or grass under an ore)
-
-Map Key:
-    P - Player
-    w - Water
-    | - Wall
-    . - Ground (safe)
-    * - Tall Grass (hostile)
-    B - Blacksmith
-    S - Shop
-    H - Inn
-    U - Boat
-    O - Ore Deposit
-    T - Tree
-
-'''
-
 import pygame
 from classes.resource import Resource
 from random import randint
 
 class world_map:
+    '''
+    The `world_map` class handles loading, storing, rendering, and updating
+    the world map. It also handles resource generation and player movement.
+
+    Map Key:
+        P: Player
+        w: Water
+        |: Wall
+        .: Ground (safe)
+        *: Tall Grass (hostile)
+        B: Blacksmith
+        S: Shop
+        H: Inn
+        U: Boat
+        O: Ore Deposit
+        T: Tree
+    '''
+
     # Initialization
     def __init__(self) -> None:
         # Initialize variables
@@ -41,7 +30,6 @@ class world_map:
         self.__resources: list[Resource] = [] # Properties for all resources that have been spawned
 
         self.initialize()
-
 
     def initialize(self):
         '''
@@ -98,7 +86,6 @@ class world_map:
             ore_type = 'iron' if randint(0, 1) == 0 else 'copper'
             self.__resources.append(Resource(ore_type, location))
 
-
     def load_map_from_file(self):
         '''
         Loads text-based map from map_data.txt into self.__data as a 2D array of strings
@@ -134,7 +121,6 @@ class world_map:
 
         self.__data[location[1]][location[0]] = self.__data[location[1]][location[0]] + value
 
-
     def remove_top_char_from_tile(self, location: tuple[int, int]):
         '''
         Removes the top character from the data string at the provided location.
@@ -149,7 +135,6 @@ class world_map:
 
         self.__data[location[1]][location[0]] = self.__data[location[1]][location[0]][:-1]
 
-
     def remove_resource(self, location: tuple[int, int]):
         '''
         Removes resource from specified location, including the map letter, and the resoruce data
@@ -162,8 +147,6 @@ class world_map:
                 return
             
         print('world_map.py -> remove_resource: Warning: No resource was removed at the specified location')
-
-        
 
 
     # Rendering
@@ -230,14 +213,12 @@ class world_map:
         tile_string = self.__data[location[1]][location[0]]
         return tile_string[len(tile_string)-1] # Return character at the end of the tile string (tile string may look like this '*P' where the player is on top of tall grass)
     
-
     def is_resource(self, char: str):
         '''
         Returns true if provided string is either 'O' or 'T'.
         '''
 
         return char == 'O' or char == 'T'
-
 
     def is_building(self, char: str):
         '''
@@ -246,7 +227,6 @@ class world_map:
 
         return char == 'B' or char == 'S' or char == 'H'
 
-
     def is_interactable(self, char: str):
         '''
         Returns true if the provided letter is something the player can interact with.
@@ -254,14 +234,12 @@ class world_map:
 
         return self.is_building(char) or self.is_resource(char) or char == 'U'
 
-
     def is_obstacle(self, char: str):
         '''
         Returns true if the provided character would block character movement.
         '''
 
         return self.is_building(char) or self.is_resource(char) or char == 'P' or char == 'w' or char == '|' or char == 'U'
-
 
     def get_nearby_resource(self):
         '''
@@ -274,7 +252,6 @@ class world_map:
 
         return None
 
-    
     def get_nearby_interactable(self):
         '''
         Returns any nearby interactable letter. Returns empty string ('') if there is nothing interactable nearby.
@@ -292,7 +269,7 @@ class world_map:
                     return tile
                 
         return ''
-                
+
 
 def location_nearby(location_1: tuple[int, int], location_2: tuple[int, int]):
     '''

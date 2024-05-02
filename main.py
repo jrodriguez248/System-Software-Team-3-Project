@@ -2,29 +2,29 @@ import pygame
 from classes.world_map import world_map
 
 # Constants
-MOVE_DELAY = 200 # Delay between movements when holding movement key (in milliseconds)
+MOVE_DELAY = 200 # Delay between player movements when holding down an arrow key (in milliseconds)
 
 # Pygame setup
-pygame.init()
-pygame.display.set_caption("Waterlogged")
-screen = pygame.display.set_mode((960, 680))
-font = pygame.font.Font('./assets/SourceCodePro-Regular.ttf', 24)
-pygame.key.set_repeat(MOVE_DELAY, MOVE_DELAY)
+pygame.init() # setup pygame
+screen = pygame.display.set_mode((960, 680)) # create a window
+pygame.display.set_caption("Waterlogged") # set window name
+font = pygame.font.Font('./assets/SourceCodePro-Regular.ttf', 24) # create a font that we can use to draw text
+pygame.key.set_repeat(MOVE_DELAY, MOVE_DELAY) # set repeat rate for keys. that way players can move by holding down the arrow keys
 
 # Game setup
 map = world_map()
 
 
 def loop():
-    screen.fill((0, 0, 0))
+    screen.fill((0, 0, 0)) # background
 
-    map.render(screen, font, render_regeion=(61, 21))
+    map.render(screen, font, render_regeion=(61, 21)) # draw map on screen
 
-    pygame.display.flip()
+    pygame.display.flip() # render everything we've done
 
 
 def on_key_pressed(event: pygame.event.Event):
-    # Movement
+    # Player movement
     if event.key == pygame.K_UP:
         map.move_player('n')
     elif event.key == pygame.K_DOWN:
@@ -34,29 +34,29 @@ def on_key_pressed(event: pygame.event.Event):
     elif event.key == pygame.K_LEFT:
         map.move_player('w')
 
-    # Interaction
+    # Object interaction
     elif event.key == pygame.K_e:
-        letter = map.get_nearby_interactable()
+        letter = map.get_nearby_interactable() # look for a nearby object to interact with
 
-        if letter == '':
-            return # Exit function, because no nearby interactables were found
-        elif letter == 'B':
+        if letter == '': # nothing interactable nearby, so do nothing
+            return
+        
+        elif letter == 'B': # blacksmith
             print('interacted with Blacksmith')
-        elif letter == 'H':
+        
+        elif letter == 'H': # inn
             print('interacted with Inn')
-        elif letter == 'S':
+        
+        elif letter == 'S': # shop
             print('interacted with Shop')
-        elif letter == 'U':
+        
+        elif letter == 'U': # boat
             print('interacted with Boat')
-        elif letter == 'O' or letter == 'T':
-            resource = map.get_nearby_resource()
-
-            # Make sure resource was actualy found. This shouldn't be a problem, but doesn't hurt to check.
-            if (resource == None):
-                print('main.py -> on_key_pressed: Warning: No resource found nearby')
-                return            
+        
+        elif letter == 'O' or letter == 'T': # resource
+            resource = map.get_nearby_resource() # get resource attributes (health and type)
             
-            resource.mine(0.1)
+            resource.mine(0.1) # partially mine the resource
 
             if resource.is_mined():
                 print('Resource collected')
@@ -66,22 +66,18 @@ def on_key_pressed(event: pygame.event.Event):
             
 
 def on_mouse_pressed(event: pygame.event.Event):
+    # example mouse interaction code
     if event.button == 1: # Left mouse button
         print("left mouse button pressed")
 
 
-# Renders text onto the screen
-def text(screen: pygame.Surface, message: str, position: tuple[int, int], size: int = 10, color: tuple[int, int, int] = (255, 255, 255)):
-    
-    img = font.render(message, True, color)
-    screen.blit(img, position)
-
-
 if __name__ == '__main__':
+    # Run gameplay loop until the game window is closed
     exit = False
     while exit == False:
         loop()
 
+        # Handle input events (like key presses or mouse presses)
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 on_key_pressed(event)
