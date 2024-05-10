@@ -1,6 +1,8 @@
 import pygame
+import random
 from classes.resource import Resource
 from random import randint
+from fight_mechanics import fight_encounter
 
 class world_map:
     '''
@@ -193,6 +195,12 @@ class world_map:
 
         # Validate location
         potential_tile = self.get_tile(move_to)
+        #Gives player a chance to trigger fight event and calls functions in fight_mechanics.py
+        if potential_tile == "*":
+            chance = random.randint(1, 100)
+            if chance <= 5:
+                fight_encounter()
+                
         if self.is_obstacle(potential_tile):
             return
 
